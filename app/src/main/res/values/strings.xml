@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">TestApplication</string>
+
+    <string name="notification_title">You are on the break</string>
+    <string name="notification_channel_name">Timer Notifications</string>
+    <string name="notification_channel_id">timer_channel</string>
+    <string name="timer_error">Something went wrong. Please, reopen app for starting timer again</string>
 </resources>
