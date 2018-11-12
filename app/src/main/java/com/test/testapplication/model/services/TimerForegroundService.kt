@@ -23,35 +23,34 @@ class TimerForegroundService : Service() {
 
     private var timerDisposable: Disposable? = null
 
-    override fun onCreate() {
-        super.onCreate()
-        ServiceSharedPreferences.setIsServiceRunning(this, false)
-    }
-
     override fun onBind(intent: Intent): IBinder? {
         return null
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        if (!ServiceSharedPreferences.getIsServiceRunning(this))
-            ServiceSharedPreferences.setIsServiceRunning(this, true)
-
         //Start timer via Rx
-        timerDisposable = Observable.interval(1, TimeUnit.SECONDS)
-                .take(TIMER_VALUE_IN_SECONDS)
-                .map { TIMER_VALUE_IN_SECONDS - 1 - it }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({ updateNotificationTime(it) }, {
-                    stopService()
-                    Toast.makeText(this, R.string.timer_error, Toast.LENGTH_SHORT).show()
-                }, {
-                    stopService()
-                })
+        if (timerDisposable == null) {
+            val timeLeft = ServiceSharedPreferences.getLeftTime(this)
+            val times = if (timeLeft == -1L || timeLeft == 0L) TIMER_VALUE_IN_SECONDS else timeLeft + 1
+            timerDisposable = Observable.interval(1, TimeUnit.SECONDS)
+                    .take(times)
+                    .map { times - 1 - it }
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe({
+                        ServiceSharedPreferences.setLeftTime(this, it)
+                        updateNotificationTime(it);
+                    }, {
+                        stopService()
+                        Toast.makeText(this, R.string.timer_error, Toast.LENGTH_SHORT).show()
+                    }, {
+                        stopService()
+                    })
+        }
 
         //Start foreground service
         startForeground(SERVICE_NOTIFICATION_ID, createNotification(getTimeString(TIMER_VALUE_IN_SECONDS)))
-        return Service.START_STICKY
+        return Service.START_REDELIVER_INTENT
     }
 
     override fun onDestroy() {
@@ -116,7 +115,7 @@ class TimerForegroundService : Service() {
     private fun stopService() {
         if (timerDisposable?.isDisposed == false)
             timerDisposable?.dispose()
-        ServiceSharedPreferences.setIsServiceRunning(this, false)
+        ServiceSharedPreferences.setLeftTime(this, -1)
         stopForeground(true)
         stopSelf()
         (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)

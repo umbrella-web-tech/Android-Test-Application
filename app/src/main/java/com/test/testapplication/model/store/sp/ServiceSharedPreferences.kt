@@ -5,31 +5,31 @@ import android.content.Context
 object ServiceSharedPreferences {
 
     private val PARAM_SERVICE_SP_FILE_NAME = "ServiceSharedPreferencesFileName"
-    private val PARAM_SERVICE_SP_IS_RUNNING = "ServiceSharedPreferencesIsRunning"
+    private val PARAM_SERVICE_SP_LEFT_TIME = "ServiceSharedPreferencesLeftTime"
 
     /**
-     * Set service is running or not.
+     * Set left time for service.
      *
      * @param context The context is used.
-     * @param isRunning Is service running.
+     * @param time The time is left.
      */
-    fun setIsServiceRunning(context: Context, isRunning: Boolean) {
+    fun setLeftTime(context: Context, time: Long) {
         val sharedPreferences = context
                 .getSharedPreferences(PARAM_SERVICE_SP_FILE_NAME, Context.MODE_PRIVATE)
         val ed = sharedPreferences.edit()
-        ed.putBoolean(PARAM_SERVICE_SP_IS_RUNNING, isRunning)
+        ed.putLong(PARAM_SERVICE_SP_LEFT_TIME, time)
         ed.apply()
     }
 
     /**
-     * Get service is running or not.
+     * Get left time for service.
      *
      * @param context The context is used.
-     * @return true if service is running, otherwise false.
+     * @return left time if it was set or -1.
      */
-    fun getIsServiceRunning(context: Context): Boolean {
+    fun getLeftTime(context: Context): Long {
         val sharedPreferences = context
                 .getSharedPreferences(PARAM_SERVICE_SP_FILE_NAME, Context.MODE_PRIVATE)
-        return sharedPreferences.getBoolean(PARAM_SERVICE_SP_IS_RUNNING, false)
+        return sharedPreferences.getLong(PARAM_SERVICE_SP_LEFT_TIME, -1)
     }
 }
